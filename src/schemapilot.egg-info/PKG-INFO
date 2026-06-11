@@ -6,7 +6,6 @@ Requires-Python: >=3.11
 Requires-Dist: polars>=1.0
 Requires-Dist: rapidfuzz>=3.0
 Requires-Dist: jellyfish>=1.0
-Requires-Dist: ftfy>=6.1
 Requires-Dist: datasketch>=1.6
 Requires-Dist: scipy>=1.11
 Requires-Dist: networkx>=3.1

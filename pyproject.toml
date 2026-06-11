@@ -11,7 +11,6 @@ dependencies = [
     "polars>=1.0",
     "rapidfuzz>=3.0",
     "jellyfish>=1.0",
-    "ftfy>=6.1",
     "datasketch>=1.6",
     "scipy>=1.11",
     "networkx>=3.1",

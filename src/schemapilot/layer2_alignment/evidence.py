@@ -60,7 +60,7 @@ class EvidenceScore:
 
 # Datatype contract -> compatible dominant fingerprint types (E₂).
 _TYPE_COMPAT: dict[Datatype, set[str]] = {
-    Datatype.ID: {"id_like", "int"},
+    Datatype.ID: {"id_like", "int", "free_text"},  # alphanumeric ids profile as free_text
     Datatype.INTEGER: {"int"},
     Datatype.DECIMAL: {"decimal", "int"},
     Datatype.DATE: {"date"},

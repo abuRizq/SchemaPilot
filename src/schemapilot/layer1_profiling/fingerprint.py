@@ -165,7 +165,11 @@ class ColumnFingerprint:
         fixed_width = self.length_min == self.length_max and (self.length_min or 0) >= 4
         if distinct_ratio > 0.9 and (fixed_width or self.leading_zero_seen):
             votes["id_like"] = self.n_present * distinct_ratio
-        votes["free_text"] = self.pattern_census["other"] + self.pattern_census["phone_like"] * 0.3
+        votes["free_text"] = (
+            self.pattern_census["other"]
+            + self.pattern_census["email"]
+            + self.pattern_census["phone_like"] * 0.3
+        )
         total = sum(votes.values()) or 1.0
         return {t: v / total for t, v in votes.items()}
 

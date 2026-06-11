@@ -261,10 +261,15 @@ def _restore_timezone(
     """§5.3 step 6: re-anchor naive datetimes from the envelope's declaration.
 
     Returns (utc_instant, original_offset, dst_flag). DST-nonexistent instants
-    prove the declaration wrong and are flagged.
+    prove the declaration wrong and are flagged. Date-only values (midnight,
+    no time component in the source) are calendar dates, not instants —
+    shifting a DOB by a UTC offset would change the date itself, so they pass
+    through unshifted.
     """
     if naive.tzinfo is not None:
         return naive.astimezone(timezone.utc), naive.strftime("%z"), None
+    if naive.hour == 0 and naive.minute == 0 and naive.second == 0:
+        return naive.replace(tzinfo=timezone.utc), None, None
     if not declared_timezone:
         return naive.replace(tzinfo=timezone.utc), None, "naive-assumed-utc"
     try:

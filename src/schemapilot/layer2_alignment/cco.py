@@ -113,6 +113,7 @@ def seed_person_cco() -> CCO:
 
     concept("person.id", Datatype.ID,
             ["id", "customer id", "cust id", "client id", "record id", "رقم العميل"],
+            mult=-1,  # parallel ID universes (CHAOS-3.3.3): every system's key is true
             patterns=["integer", "leading_zero_id"])
     concept("person.name.full", Datatype.NAME,
             ["name", "full name", "customer name", "client name", "الاسم", "اسم العميل",
