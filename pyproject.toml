@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "schemapilot"
+version = "0.1.0"
+description = "SchemaPilot 7-Layer Single Source of Truth engine"
+requires-python = ">=3.11"
+dependencies = [
+    "polars>=1.0",
+    "rapidfuzz>=3.0",
+    "jellyfish>=1.0",
+    "ftfy>=6.1",
+    "datasketch>=1.6",
+    "scipy>=1.11",
+    "networkx>=3.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
