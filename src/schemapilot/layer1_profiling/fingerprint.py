@@ -160,10 +160,15 @@ class ColumnFingerprint:
             + self.pattern_census["dash_date"]
         )
         votes["bool"] = self.pattern_census["bool_like"] * 0.8
-        # id-like: high cardinality, fixed width or leading zeros (CHAOS-1.4.9).
+        # id-like: high cardinality, fixed width or leading zeros (CHAOS-1.4.9) —
+        # suppressed when a semantic pattern (email/phone/date) explains the
+        # column, since those are also high-cardinality and often fixed-width.
         distinct_ratio = min(1.0, self.cardinality / self.n_present)
         fixed_width = self.length_min == self.length_max and (self.length_min or 0) >= 4
-        if distinct_ratio > 0.9 and (fixed_width or self.leading_zero_seen):
+        semantic_mass = (
+            self.pattern_census["email"] + self.pattern_census["phone_like"] + votes["date"]
+        ) / self.n_present
+        if distinct_ratio > 0.9 and (fixed_width or self.leading_zero_seen) and semantic_mass < 0.5:
             votes["id_like"] = self.n_present * distinct_ratio
         votes["free_text"] = (
             self.pattern_census["other"]

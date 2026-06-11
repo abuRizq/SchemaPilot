@@ -75,28 +75,31 @@ def gate(
     return out
 
 
-def collapse_duplicate_columns(
-    mappings: list[GatedMapping],
+def find_duplicate_columns(
+    columns: list[str],
     fingerprints: dict[str, ColumnFingerprint],
+    best_concept: dict[str, tuple[str, float]],  # column -> (concept_id, score)
     *,
     overlap_threshold: float = 0.95,
-) -> list[GatedMapping]:
-    """Intra-file columns with near-1.0 mutual instance overlap mapped to the
-    same concept collapse pre-assignment (CHAOS-1.3.1–1.3.4); the survivors'
-    disagreements become L5's input via the normal fusion path."""
-    by_concept: dict[str, list[GatedMapping]] = {}
-    for m in mappings:
-        if m.concept_id and m.route is not Route.UNMAPPED:
-            by_concept.setdefault(m.concept_id, []).append(m)
-    for concept_id, group in by_concept.items():
-        if len(group) < 2:
-            continue
-        group.sort(key=lambda m: (-m.score, m.column))
-        primary = group[0]
-        for other in group[1:]:
-            fa, fb = fingerprints.get(primary.column), fingerprints.get(other.column)
-            if fa and fb:
-                mutual = min(fa.value_overlap(fb), fb.value_overlap(fa))
-                if mutual >= overlap_threshold:
-                    other.collapsed_into = primary.column
-    return mappings
+) -> dict[str, str]:
+    """Pre-assignment duplicate-column collapse (CHAOS-1.3.1–1.3.4): intra-file
+    columns with near-1.0 mutual instance overlap whose evidence points at the
+    same concept are one column wearing two labels. Returns duplicate -> primary;
+    duplicates are withheld from the assignment so they cannot consume (or be
+    starved of) a single-valued concept slot."""
+    out: dict[str, str] = {}
+    for ai, a in enumerate(columns):
+        for b in columns[ai + 1:]:
+            if b in out or a in out:
+                continue
+            ca, cb = best_concept.get(a), best_concept.get(b)
+            if not ca or not cb or ca[0] != cb[0]:
+                continue
+            fa, fb = fingerprints.get(a), fingerprints.get(b)
+            if fa is None or fb is None:
+                continue
+            mutual = min(fa.value_overlap(fb), fb.value_overlap(fa))
+            if mutual >= overlap_threshold:
+                primary, dup = (a, b) if ca[1] >= cb[1] else (b, a)
+                out[dup] = primary
+    return out

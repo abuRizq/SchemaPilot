@@ -70,13 +70,16 @@ class QuantileSketch:
         self.capacity = capacity
         self._values: list[float] = []
         self.count = 0
+        self._stride = 1  # doubles on decimation so every kept value carries equal mass
 
     def add(self, value: float) -> None:
         self.count += 1
+        if (self.count - 1) % self._stride:
+            return
         self._values.append(value)
         if len(self._values) > self.capacity * 2:
-            self._values.sort()
-            self._values = self._values[::2]  # deterministic decimation
+            self._values = sorted(self._values)[::2]  # deterministic decimation
+            self._stride *= 2
 
     def quantile(self, q: float) -> float | None:
         if not self._values:

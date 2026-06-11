@@ -141,18 +141,22 @@ def chimera_veto(
         if entropy < policy.chimera_entropy_threshold or len(c.members) < 2:
             out.append(c)
             continue
-        # Re-split: drop the weakest tertile of internal edges, take components.
+        # Re-split: remove weakest internal edges until the cluster actually
+        # disconnects — a chained chimera (strong A-B, strong B-C, weak A-C)
+        # must break at its weakest cut, not merely shed its weakest edge.
         sub = nx.Graph()
         sub.add_nodes_from(c.members)
         edges = sorted(
-            ((weight_of.get((min(u, v), max(u, v)), 0.0), u, v)
-             for ui, u in enumerate(c.members) for v in c.members[ui + 1:]
-             if (min(u, v), max(u, v)) in weight_of),
-            reverse=True,
+            (weight_of.get((min(u, v), max(u, v)), 0.0), u, v)
+            for ui, u in enumerate(c.members) for v in c.members[ui + 1:]
+            if (min(u, v), max(u, v)) in weight_of
         )
-        keep = edges[: max(1, (2 * len(edges)) // 3)] if edges else []
-        for w, u, v in keep:
+        for w, u, v in edges:
             sub.add_edge(u, v, weight=w)
+        for w, u, v in edges:  # ascending: weakest first
+            if nx.number_connected_components(sub) > 1:
+                break
+            sub.remove_edge(u, v)
         for component in nx.connected_components(sub):
             out.append(_finalize(component, sub, next_idx, veto_split=True))
             next_idx += 1
